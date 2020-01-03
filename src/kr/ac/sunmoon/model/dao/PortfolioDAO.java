@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 import kr.ac.sunmoon.model.dto.Portfolio;
 import kr.ac.sunmoon.model.dto.PortfolioData;
-import kr.ac.sunmoon.util.DBManager;
+import kr.ac.sunmoon.util.DBUtil;
 
 public class PortfolioDAO {
 	
@@ -21,7 +21,7 @@ public class PortfolioDAO {
 		ArrayList<Portfolio> list = new ArrayList<Portfolio>();
 		
 		try {
-			con = DBManager.getConnection();
+			con = DBUtil.getConnection();
 			stmt = con.prepareStatement(sql);
 			rs = stmt.executeQuery();
 			while (rs.next()) {
@@ -29,7 +29,9 @@ public class PortfolioDAO {
 						null, rs.getString(5), rs.getString(6), rs.getString(7), rs.getInt(8)));
 			}
 		}finally {
-			DBManager.close(rs, stmt, con);
+			DBUtil.close(rs);
+			DBUtil.close(stmt);
+			DBUtil.close(con);
 		}
 		return list;
 	}	
@@ -44,7 +46,7 @@ public class PortfolioDAO {
 		ArrayList<Portfolio> list = new ArrayList<Portfolio>();
 		
 		try {
-			con = DBManager.getConnection();
+			con = DBUtil.getConnection();
 			stmt = con.prepareStatement(sql);
 			stmt.setString(1, "%"+title+"%");
 			rs = stmt.executeQuery();
@@ -53,7 +55,9 @@ public class PortfolioDAO {
 						null, rs.getString(5), rs.getString(6), rs.getString(7), rs.getInt(8)));
 			}
 		}finally {
-			DBManager.close(rs, stmt, con);
+			DBUtil.close(rs);
+			DBUtil.close(stmt);
+			DBUtil.close(con);
 		}
 		return list;
 	}	
@@ -67,7 +71,7 @@ public class PortfolioDAO {
 		ArrayList<PortfolioData> list = new ArrayList<PortfolioData>();
 		
 		try {
-			con = DBManager.getConnection();
+			con = DBUtil.getConnection();
 			stmt = con.prepareStatement(sql);
 			stmt.setInt(1, no);
 			rs = stmt.executeQuery();
@@ -75,7 +79,9 @@ public class PortfolioDAO {
 				list.add(new PortfolioData(rs.getInt(1), rs.getString(2), rs.getString(3)));
 			}
 		}finally {
-			DBManager.close(rs, stmt, con);
+			DBUtil.close(rs);
+			DBUtil.close(stmt);
+			DBUtil.close(con);
 		}
 		return list;
 	}	
@@ -89,7 +95,7 @@ public class PortfolioDAO {
 		Portfolio p = null;
 		
 		try {
-			con = DBManager.getConnection();
+			con = DBUtil.getConnection();
 			stmt = con.prepareStatement(sql);
 			stmt.setInt(1, no);
 			rs = stmt.executeQuery();
@@ -98,7 +104,9 @@ public class PortfolioDAO {
 						rs.getString(5), rs.getString(5), rs.getString(6), rs.getString(7),0);
 			}
 		}finally {
-			DBManager.close(rs, stmt, con);
+			DBUtil.close(rs);
+			DBUtil.close(stmt);
+			DBUtil.close(con);
 		}
 		return p;
 	}	
@@ -110,7 +118,7 @@ public class PortfolioDAO {
 				+ "	start_date=STR_TO_DATE(?, '%Y-%m-%d'),"
 				+ "end_date=STR_TO_DATE(?, '%Y-%m-%d'),reg_date=curdate()";
 		try {
-			con = DBManager.getConnection();
+			con = DBUtil.getConnection();
 			stmt = con.prepareStatement(sql);
 			stmt.setString(1, p.getTitle());
 			stmt.setString(2, p.getLeader());
@@ -120,7 +128,8 @@ public class PortfolioDAO {
 			stmt.setString(6, p.getEndDate());
 			stmt.executeUpdate();
 		} finally {
-			DBManager.close(stmt, con);
+			DBUtil.close(stmt);
+			DBUtil.close(con);
 		}
 	}
 	public int insert(Portfolio p) throws Exception {
@@ -134,7 +143,7 @@ public class PortfolioDAO {
 		
 		try {
 			System.out.println(p);
-			con = DBManager.getConnection();
+			con = DBUtil.getConnection();
 			con.setAutoCommit(false);
 			stmt = con.prepareStatement(sql);
 			noStmt = con.prepareStatement(noSql);
@@ -152,12 +161,13 @@ public class PortfolioDAO {
 			con.commit();
 		}catch(Exception e){
 			e.printStackTrace();
-			con.rollback();
+			if(con != null) con.rollback();
 			throw e;
 		}finally {
-			con.setAutoCommit(true);
-			DBManager.close(rs,stmt, con);
-			DBManager.close(noStmt, con);
+			DBUtil.close(rs);
+			DBUtil.close(stmt);
+			DBUtil.close(noStmt);
+			DBUtil.close(con);
 		}
 		return no;
 	}
@@ -167,7 +177,8 @@ public class PortfolioDAO {
 		String sql = "insert into portfolio_data(original_file_name,real_file_name,portfolio_no) "
 				+ "values(?,?,?)";
 		try {
-			con = DBManager.getConnection();
+			con = DBUtil.getConnection();
+			con.setAutoCommit(false);
 			stmt = con.prepareStatement(sql);
 			
 			for (PortfolioData p : list) {
@@ -176,8 +187,13 @@ public class PortfolioDAO {
 				stmt.setInt(3, no);
 				stmt.executeUpdate();				
 			}
-		} finally {
-			DBManager.close(stmt, con);
+			con.commit();
+		}catch(Exception e) {
+			if(con != null) con.rollback();
+			throw e;
+		}finally {
+			DBUtil.close(stmt);
+			DBUtil.close(con);
 		}
 	}
 	
@@ -186,34 +202,14 @@ public class PortfolioDAO {
 		PreparedStatement stmt = null;
 		String sql = "delete from portfolio where no = ?";
 		try {
-			con = DBManager.getConnection();
+			con = DBUtil.getConnection();
 			stmt = con.prepareStatement(sql);
 			stmt.setInt(1, no);
 			stmt.executeUpdate();
 		} finally {
-			DBManager.close(stmt, con);
+			DBUtil.close(stmt);
+			DBUtil.close(con);
 		}
 	}
 	
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

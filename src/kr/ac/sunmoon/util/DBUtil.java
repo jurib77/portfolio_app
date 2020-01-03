@@ -9,7 +9,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
-public class DBManager {
+public class DBUtil {
 	private static DataSource datasource;
 	static {
 		Context context;
@@ -26,33 +26,32 @@ public class DBManager {
 		return datasource.getConnection();
 	}
 
-	public static void close(ResultSet rs, Statement stmt, Connection con) {
+	public static void close(Connection con) {
 
 		try {
-			if (rs != null) {
-				rs.close();
-			}
-			if (stmt != null) {
-				stmt.close();
-			}
 			if (con != null) {
+				con.setAutoCommit(true);
 				con.close();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	public static void close(Statement stmt, Connection con) {
+	public static void close(Statement stmt) {
 		
 		try {
-			if (stmt != null) {
-				stmt.close();
-			}
-			if (con != null) {
-				con.close();
-			}
+			if (stmt != null) stmt.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
+	public static void close(ResultSet rs) {
+		
+		try {
+			if (rs != null) rs.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 }
